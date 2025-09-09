@@ -1,0 +1,871 @@
+#!/Library/Developer/CommandLineTools/usr/bin/python3
+"""
+DominateAI - AI Automation Tool
+Wake word: DomAI
+
+An intelligent automation assistant that can:
+- Generate and deploy code instantly
+- Automate web tasks
+- Deploy to Google Cloud Platform
+- Clone and extend repositories
+- Create n8n automation pipelines
+- And much more...
+"""
+
+import sys
+import os
+import json
+from pathlib import Path
+
+# Add the DominateAI directory to Python path
+DOMAI_DIR = Path(__file__).parent.absolute()
+sys.path.insert(0, str(DOMAI_DIR))
+
+# ASCII Art Banner
+BANNER = """
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║    ██████╗  ██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ████████╗███████╗       ║
+║    ██╔══██╗██╔═══██╗████╗ ████║██║████╗  ██║██╔══██╗╚══██╔══╝██╔════╝       ║
+║    ██║  ██║██║   ██║██╔████╔██║██║██╔██╗ ██║███████║   ██║   █████╗         ║
+║    ██║  ██║██║   ██║██║╚██╔╝██║██║██║╚██╗██║██╔══██║   ██║   ██╔══╝         ║
+║    ██████╔╝╚██████╔╝██║ ╚═╝ ██║██║██║ ╚████║██║  ██║   ██║   ███████╗       ║
+║    ╚═════╝  ╚═════╝ ╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝   ╚═╝   ╚══════╝       ║
+║                                                                              ║
+║                           🤖 AI Automation Tool 🚀                          ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
+def show_banner():
+    print("\033[1;36m" + BANNER + "\033[0m")  # Cyan color
+
+def show_help():
+    print("""
+🎯 DominateAI Commands:
+
+🚀 DEPLOYMENT:
+  • deploy website [description]     - Deploy static site to Vercel
+  • deploy site [description]        - Quick website deployment
+  • deploy api [description]         - Deploy serverless API
+  • create webhook                   - Create automation webhook
+
+💻 CODE GENERATION:
+  • write code [description]         - Generate Python code with AI
+  • generate [language] [description] - Generate code in any language
+  • fix code [file]                  - Fix errors in code file
+
+🌐 WEB AUTOMATION:
+  • navigate to [url]                - Open website in browser
+  • open website [url]               - Navigate to website
+  • automate [task]                  - Perform automation task
+
+🔧 REPOSITORY MANAGEMENT:
+  • clone [github-url]               - Clone GitHub repository
+  • pull repo [url]                 - Clone and analyze repo
+  • create repo [name]               - Create new repository
+
+⚡ SUPERPOWERS:
+  • open application [app]           - Open Mac application  
+  • build website [description]      - Generate and save website
+  • deploy website [description]     - Build and deploy to cloud
+  • create workflow [description]    - Create n8n automation
+  • clone repo [github-url]          - Clone and extend from GitHub
+  • superpowers                     - List available superpowers
+  • system info                     - Show Mac system information
+
+⚙️  SYSTEM:
+  • install [package]                - Install Python package
+  • status                          - Show system status
+  • config                          - Show configuration
+  • help                            - Show this help
+  • quit / exit / stop               - Exit DominateAI
+  • Press Ctrl+C anytime to interrupt
+
+🎮 INTERACTIVE MODE:
+  • chat                            - Enter conversational mode
+  • ask [question]                  - Ask DominateAI anything
+
+💡 Examples:
+  DomAI > deploy website for my portfolio
+  DomAI > write code to sort a list of dictionaries
+  DomAI > open application Safari
+  DomAI > navigate to google.com
+  DomAI > clone repo github.com/user/awesome-repo
+  DomAI > create workflow for data processing
+  DomAI > superpowers
+""")
+
+def show_status():
+    """Show system status and configuration"""
+    print("🔍 DominateAI System Status:")
+    print("=" * 50)
+    
+    # Check OpenAI API
+    openai_key = os.getenv('OPENAI_API_KEY')
+    if openai_key:
+        print("✅ OpenAI API: Configured")
+    else:
+        print("⚠️  OpenAI API: Not configured")
+    
+    # Check GCP
+    try:
+        import subprocess
+        result = subprocess.run(['gcloud', 'config', 'get-value', 'project'], 
+                              capture_output=True, text=True)
+        if result.returncode == 0 and result.stdout.strip():
+            print(f"✅ Google Cloud: {result.stdout.strip()}")
+        else:
+            print("⚠️  Google Cloud: Not configured")
+    except:
+        print("❌ Google Cloud: CLI not found")
+    
+    # Check dependencies
+    try:
+        import openai, selenium, transformers
+        print("✅ Dependencies: All installed")
+    except ImportError as e:
+        print(f"⚠️  Dependencies: Missing {e.name}")
+    
+    # Show location
+    print(f"📁 Location: {DOMAI_DIR}")
+    print(f"🐍 Python: {sys.executable}")
+
+def get_user_input(prompt="DomAI > "):
+    """Get user input with custom prompt and escape key handling"""
+    try:
+        user_input = input(f"\033[1;32m{prompt}\033[0m").strip()
+        # Check for escape sequences or quit commands
+        if user_input.lower() in ['exit', 'quit', 'q', '\x1b', 'stop', 'sstop']:
+            print("👋 Goodbye!")
+            sys.exit(0)
+        # Skip empty input or repeated fallback messages
+        if not user_input or user_input.startswith('🔄'):
+            return ""
+        return user_input
+    except (KeyboardInterrupt, EOFError):
+        print("\n👋 Goodbye!")
+        sys.exit(0)
+
+def main():
+    """Main DominateAI CLI interface"""
+    
+    # Check if running with arguments
+    if len(sys.argv) > 1:
+        command = " ".join(sys.argv[1:])
+        
+        # Handle special flags
+        if command in ['-h', '--help', 'help']:
+            show_banner()
+            show_help()
+            return
+        elif command in ['-v', '--version', 'version']:
+            print("DominateAI v1.0 - AI Automation Tool")
+            return
+        elif command in ['status', '--status']:
+            show_status()
+            return
+        
+        # Execute single command and exit
+        try:
+            from ai_tool_with_gcp import AIToolWithGCP
+            tool = AIToolWithGCP()
+            print(f"🤖 Executing: {command}")
+            tool.execute_task(command)
+        except Exception as e:
+            print(f"❌ Error: {e}")
+        return
+    
+    # Interactive mode
+    show_banner()
+    print("🤖 Welcome to DominateAI! Your AI automation assistant.")
+    print("💡 Type 'help' for commands, 'chat' for conversation mode, or 'quit' to exit.")
+    print()
+    
+    # Initialize the AI tool with working Vertex AI and Superpowers
+    try:
+        from working_gemini_integration import WorkingGeminiManager
+        from gcp_deployer import GCPDeployer
+        from vercel_deployer import VercelDeployer
+        from superpower_manager import SuperpowerManager
+        
+        # Initialize components
+        print("🔧 Initializing DominateAI components...")
+        gemini = WorkingGeminiManager()
+        gcp = GCPDeployer()
+        vercel = VercelDeployer()
+        
+        # Initialize Superpowers
+        print("⚡ Loading superpowers...")
+        superpower_manager = SuperpowerManager()
+        superpowers = superpower_manager.initialize_all_superpowers()
+        
+        if gemini.available:
+            print("✅ DominateAI initialized with Vertex AI, Vercel, and Superpowers!")
+            tool = "vertex"  # Use vertex mode
+        else:
+            print("⚠️  Vertex AI not available, using basic mode with superpowers")
+            tool = "basic"
+            
+    except Exception as e:
+        print(f"❌ Could not initialize: {e}")
+        tool = None
+        gemini = None
+        gcp = None
+        vercel = None
+        superpower_manager = None
+    
+    print()
+    
+    # Main interaction loop
+    while True:
+        try:
+            command = get_user_input()
+            
+            if not command:
+                continue
+            
+            # Handle built-in commands
+            if command.lower() in ['quit', 'exit', 'q']:
+                print("👋 Goodbye!")
+                break
+            elif command.lower() in ['help', 'h']:
+                show_help()
+            elif command.lower() == 'status':
+                show_status()
+            elif command.lower() == 'config':
+                print(f"📁 DominateAI Directory: {DOMAI_DIR}")
+                print(f"🔧 Configuration: {DOMAI_DIR}/.env")
+            elif command.lower() == 'chat':
+                print("💬 Entering chat mode. Type 'exit' to return to command mode.")
+                chat_mode(tool)
+            elif command.lower().startswith('ask '):
+                question = command[4:].strip()
+                handle_question(question, tool)
+            else:
+                # Execute AI tool command
+                if tool in ["vertex", "basic"] and superpower_manager:
+                    try:
+                        handle_superpower_command(command, gemini, gcp, vercel, superpower_manager)
+                    except Exception as e:
+                        # Auto-fix errors using Self Fixer
+                        self_fixer = superpower_manager.get_superpower('Self Fixer')
+                        if self_fixer:
+                            print(f"🔧 Auto-fixing error: {str(e)}")
+                            fix_result = self_fixer.detect_and_fix_error(str(e), command)
+                            if fix_result.get('success'):
+                                print("🔄 Retrying command after fix...")
+                                try:
+                                    handle_superpower_command(command, gemini, gcp, vercel, superpower_manager)
+                                except Exception as retry_e:
+                                    print(f"❌ Command still failing: {retry_e}")
+                            else:
+                                print(f"❌ Could not auto-fix: {str(e)}")
+                        else:
+                            print(f"❌ Error: {e}")
+                elif tool == "vertex" and gemini:
+                    try:
+                        handle_vertex_command(command, gemini, gcp, vercel)
+                    except Exception as e:
+                        print(f"❌ Error: {e}")
+                elif tool == "basic":
+                    print(f"🔧 Basic mode: {command}")
+                    print("💡 Enable Vertex AI for full capabilities")
+                else:
+                    print("❌ DominateAI core not available. Check configuration.")
+            
+            print()  # Add spacing between commands
+            
+        except KeyboardInterrupt:
+            print("\n👋 Goodbye!")
+            break
+        except Exception as e:
+            print(f"❌ Error: {e}")
+
+def chat_mode(tool):
+    """Enter conversational chat mode"""
+    print("\n🤖 DominateAI Chat Mode")
+    print("=" * 30)
+    
+    while True:
+        try:
+            message = get_user_input("You > ")
+            
+            if message.lower() in ['exit', 'quit', 'back']:
+                print("🔙 Returning to command mode...")
+                break
+            
+            if not message:
+                continue
+            
+            # Simple conversational responses
+            if any(word in message.lower() for word in ['hello', 'hi', 'hey']):
+                print("🤖 DomAI: Hello! I'm DominateAI, your AI automation assistant. How can I help you today?")
+            elif 'what can you do' in message.lower() or 'capabilities' in message.lower():
+                print("🤖 DomAI: I can deploy websites, create APIs, generate code, automate tasks, clone repos, and much more! Try 'help' for a full list.")
+            elif 'weather' in message.lower():
+                print("🤖 DomAI: I can't check the weather directly, but I can deploy a weather API for you! Try: 'deploy api for weather data'")
+            elif any(word in message.lower() for word in ['deploy', 'create', 'generate', 'code']):
+                print("🤖 DomAI: I'll help you with that!")
+                # Execute the command directly without verbose responses
+                print(f"Executing: {message}")
+                # Handle the command without going through verbose chat
+            else:
+                print("🤖 DomAI: I understand you want to:", message)
+                print("🤖 DomAI: I can help with automation tasks. Try being more specific about what you'd like to deploy or automate!")
+            
+        except KeyboardInterrupt:
+            print("\n🔙 Returning to command mode...")
+            break
+
+def handle_vertex_command(command, gemini, gcp, vercel):
+    """Handle commands with Vertex AI integration"""
+    
+    cmd_lower = command.lower()
+    
+    # Code generation
+    if 'generate code' in cmd_lower or 'write code' in cmd_lower:
+        # Extract the task
+        task = command
+        for prefix in ['generate code for', 'write code for', 'generate code to', 'write code to', 'generate code', 'write code']:
+            task = task.replace(prefix, '', 1).strip()
+        
+        if not task:
+            task = "a simple function"
+            
+        print(f"💻 Generating code: {task}")
+        print("-" * 40)
+        code = gemini.generate_code(task, stream=True)
+        print("\n" + "-" * 40)
+        
+        # Save code
+        timestamp = int(__import__('time').time())
+        filename = f"generated_{timestamp}.py"
+        with open(filename, 'w') as f:
+            # Clean code for saving
+            clean_code = code
+            if '```python' in clean_code:
+                clean_code = clean_code.split('```python')[1].split('```')[0]
+            elif '```' in clean_code:
+                clean_code = clean_code.split('```')[1].split('```')[0]
+            f.write(clean_code)
+        print(f"💾 Code saved to: {filename}")
+    
+    # Chat/conversation
+    elif 'chat' in cmd_lower or 'ask' in cmd_lower or 'explain' in cmd_lower:
+        message = command
+        if cmd_lower.startswith('chat '):
+            message = command[5:].strip()
+        elif cmd_lower.startswith('ask '):
+            message = command[4:].strip()
+            
+        print("💬 Gemini:", end=" ")
+        gemini.chat(message, stream=True, concise=True)
+    
+    # Code analysis
+    elif 'analyze' in cmd_lower and 'code' in cmd_lower:
+        # Look for filename in command
+        words = command.split()
+        filename = None
+        for word in words:
+            if '.' in word and not word.startswith('http'):
+                filename = word
+                break
+        
+        if filename and __import__('os').path.exists(filename):
+            print(f"🔍 Analyzing {filename}")
+            print("-" * 30)
+            with open(filename, 'r') as f:
+                code = f.read()
+            
+            task = 'analyze'
+            if 'fix' in cmd_lower:
+                task = 'fix'
+            elif 'optimize' in cmd_lower:
+                task = 'optimize'
+            elif 'review' in cmd_lower:
+                task = 'review'
+                
+            gemini.analyze_code(code, task, stream=True)
+            print("\n" + "-" * 30)
+        else:
+            print("❌ Please specify a valid code file to analyze")
+            print("   Example: analyze code main.py")
+    
+    # Deployment
+    elif 'deploy' in cmd_lower:
+        if 'website' in cmd_lower or 'site' in cmd_lower:
+            description = command.replace('deploy', '').replace('website', '').replace('site', '').strip()
+            if not description:
+                description = "a modern website"
+            
+            print(f"🏗️  Building and deploying {description}...")
+            
+            # Generate simple website content
+            website_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>{description.title()}</title>
+    <style>
+        body {{ font-family: system-ui; max-width: 800px; margin: 50px auto; padding: 20px; }}
+        h1 {{ color: #333; }}
+    </style>
+</head>
+<body>
+    <h1>🤖 {description.title()}</h1>
+    <p>This site was automatically generated and deployed by DomAI.</p>
+    <p>Built on: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
+</body>
+</html>"""
+            
+            if vercel and getattr(vercel, 'available', False):
+                print("🌐 Deploying to Vercel...")
+                result = vercel.deploy_website(website_content)
+                if result.get('success'):
+                    print(f"✅ Live at: {result.get('url')}")
+                else:
+                    print(f"❌ Deploy failed: {result.get('error')}")
+            elif vercel:
+                print("⚠️  Vercel not authenticated. Run: vercel login")
+            else:
+                print("❌ Vercel not available")
+        else:
+            print("💡 Try: 'deploy website for my portfolio'")
+            print("🔧 More deployment options coming soon!")
+    
+    # Default
+    else:
+        # Only use Gemini for explicit questions or complex requests
+        if any(word in cmd_lower for word in ['what', 'how', 'why', 'explain', 'help me']):
+            print("💬 Gemini:", end=" ")
+            gemini.chat(command, stream=True, concise=True)
+        else:
+            print(f"❓ Command not recognized: '{command}'")
+            print("💡 Try 'help' for available commands")
+
+def handle_superpower_command(command, gemini, gcp, vercel, superpower_manager):
+    """Handle commands with superpower integration"""
+    cmd_lower = command.lower()
+    
+    # Mac control commands
+    if 'open application' in cmd_lower or 'open app' in cmd_lower:
+        mac_control = superpower_manager.get_superpower('Mac System Control')
+        if mac_control:
+            app_name = command.split()[-1]  # Get last word as app name
+            result = mac_control.open_application(app_name)
+            print(f"🖥️  {result}")
+        else:
+            print("❌ Mac control not available")
+    
+    # Browser automation commands
+    elif 'navigate to' in cmd_lower or 'open website' in cmd_lower or 'browse' in cmd_lower:
+        browser = superpower_manager.get_superpower('Browser Automation')
+        if browser:
+            # Extract URL from command
+            words = command.split()
+            url = None
+            for word in words:
+                if 'http' in word or '.' in word:
+                    url = word if word.startswith('http') else f"https://{word}"
+                    break
+            
+            if url:
+                result = browser.navigate_to(url)
+                print(f"🌐 {result}")
+            else:
+                print("❌ Please specify a valid URL")
+        else:
+            print("❌ Browser control not available")
+    
+    # GitHub extension commands  
+    elif 'clone' in cmd_lower and ('repo' in cmd_lower or 'github' in cmd_lower):
+        github = superpower_manager.get_superpower('GitHub Extension System')
+        if github:
+            # Extract GitHub URL
+            words = command.split()
+            github_url = None
+            for word in words:
+                if 'github.com' in word or word.endswith('.git'):
+                    github_url = word
+                    break
+            
+            if github_url:
+                print(f"🔄 Cloning and extending from: {github_url}")
+                result = github.clone_and_extend(github_url)
+                print(f"📦 {result}")
+            else:
+                print("❌ Please specify a valid GitHub URL")
+        else:
+            print("❌ GitHub extension system not available")
+    
+    # Website building commands
+    elif 'build website' in cmd_lower or 'create website' in cmd_lower or 'deploy website' in cmd_lower:
+        website_builder = superpower_manager.get_superpower('Website Builder & Deployer')
+        if website_builder:
+            # Extract description
+            description = command.replace('build website', '').replace('create website', '').replace('deploy website', '').strip()
+            if not description:
+                description = "A modern, responsive website"
+            
+            print(f"🏗️  Building website: {description}")
+            html_content = website_builder.generate_website(description)
+            
+            # Deploy with preference for Vercel
+            if 'deploy' in cmd_lower:
+                site_name = description.split()[0].lower() if description else "domai-site"
+                if vercel and getattr(vercel, 'available', False):
+                    print("🌐 Deploying to Vercel...")
+                    deploy_result = vercel.deploy_website(html_content, site_name)
+                    if deploy_result.get('success'):
+                        print(f"✅ Deployed: {deploy_result.get('url', 'Success!')}")
+                    else:
+                        print(f"❌ Vercel failed: {deploy_result.get('error')}")
+                        # Fallback to GCP if available
+                        if website_builder:
+                            print("🔄 Trying Google Cloud Storage...")
+                            gcp_result = website_builder.deploy_to_cloud_storage(html_content, site_name)
+                            print(f"☁️  {gcp_result}")
+                elif vercel:
+                    print(f"⚠️  Vercel not authenticated. Run: vercel login")
+                    print("🔄 Using local save instead...")
+                    filename = f"website_{int(__import__('time').time())}.html"
+                    with open(filename, 'w') as f:
+                        f.write(html_content)
+                    print(f"💾 Website saved to: {filename}")
+                else:
+                    # Use GCP as fallback
+                    if website_builder:
+                        gcp_result = website_builder.deploy_to_cloud_storage(html_content, site_name)
+                        print(f"☁️  {gcp_result}")
+                    else:
+                        filename = f"website_{int(__import__('time').time())}.html"
+                        with open(filename, 'w') as f:
+                            f.write(html_content)
+                        print(f"💾 Website saved to: {filename}")
+            else:
+                # Save locally
+                filename = f"website_{int(__import__('time').time())}.html"
+                with open(filename, 'w') as f:
+                    f.write(html_content)
+                print(f"💾 Website saved to: {filename}")
+        else:
+            print("❌ Website builder not available")
+    
+    # n8n workflow commands
+    elif 'create workflow' in cmd_lower or 'n8n' in cmd_lower:
+        n8n = superpower_manager.get_superpower('n8n Workflow Automation')
+        if n8n:
+            # Extract workflow description
+            description = command.replace('create workflow', '').replace('n8n', '').strip()
+            if not description:
+                description = "AI automation workflow"
+            
+            print(f"⚙️  Creating n8n workflow: {description}")
+            workflow = n8n.create_ai_automation_workflow(description)
+            
+            # Save workflow
+            filename = f"workflow_{description.replace(' ', '_')}.json"
+            save_result = n8n.save_workflow(workflow, filename)
+            print(f"📋 {save_result}")
+        else:
+            print("❌ n8n controller not available")
+    
+    # List superpowers
+    elif 'superpowers' in cmd_lower or 'powers' in cmd_lower:
+        powers = superpower_manager.list_superpowers()
+        print("⚡ Available Superpowers:")
+        for power in powers:
+            print(f"  • {power}")
+        
+        # Show AI Gateway models if available
+        ai_gateway = superpower_manager.get_superpower('AI Gateway Manager')
+        if ai_gateway and ai_gateway.available:
+            print(f"\n🌐 AI Gateway: Access to {len(ai_gateway.available_models)} models:")
+            print("  • OpenAI: GPT-4, GPT-4 Turbo, GPT-5")
+            print("  • Anthropic: Claude 3 Opus, Claude Sonnet 4")  
+            print("  • Google: Gemini Pro, Gemini Ultra")
+            print("  • Meta: Llama 2 models")
+            print("  • And many more...")
+    
+    # Test AI Gateway models  
+    elif 'test ai' in cmd_lower or 'test models' in cmd_lower:
+        ai_gateway = superpower_manager.get_superpower('AI Gateway Manager')
+        if ai_gateway and ai_gateway.available:
+            test_prompt = "Explain quantum computing in one sentence."
+            print("🧪 Testing AI Gateway models:")
+            
+            models_to_test = ['claude-3-sonnet-20240229', 'gpt-4', 'gpt-3.5-turbo']
+            
+            errors_found = False
+            for model in models_to_test:
+                print(f"  Testing {model}...")
+                result = ai_gateway.chat_with_model(test_prompt, model)
+                if result.get('success'):
+                    print(f"    ✅ {result['response'][:100]}...")
+                else:
+                    print(f"    ❌ {result.get('error', 'Failed')}")
+                    errors_found = True
+            
+            # Auto-fix errors if found
+            if errors_found:
+                self_fixer = superpower_manager.get_superpower('Self Fixer')
+                if self_fixer:
+                    print("\n🔧 Auto-fixing AI Gateway errors...")
+                    fix_result = self_fixer.fix_ai_gateway_errors()
+                    if fix_result.get('success'):
+                        print(f"✅ Applied {len(fix_result.get('fixes_applied', []))} fixes")
+                        print("🔄 Try testing models again - errors should be resolved")
+        else:
+            print("❌ AI Gateway not available")
+    
+    # System info
+    elif 'system info' in cmd_lower or 'mac info' in cmd_lower:
+        mac_control = superpower_manager.get_superpower('Mac System Control')
+        if mac_control:
+            info = mac_control.get_system_info()
+            print("🖥️  System Information:")
+            for key, value in info.items():
+                print(f"  • {key.title()}: {value}")
+        else:
+            print("❌ Mac control not available")
+    
+    # Project management commands
+    elif any(word in cmd_lower for word in ['find', 'analyze', 'continue', 'finish', 'complete', 'project']):
+        project_analyzer = superpower_manager.get_superpower('Project Analyzer')
+        if project_analyzer and any(word in cmd_lower for word in ['flipai', 'flip ai']):
+            print("🔍 Searching for FlipAI project...")
+            projects = project_analyzer.find_project("flipai")
+            
+            if projects:
+                print(f"📁 Found {len(projects)} FlipAI project(s):")
+                for i, project in enumerate(projects, 1):
+                    print(f"  {i}. {project}")
+                
+                # Analyze the first project found
+                main_project = projects[0]
+                print(f"\n📊 Analyzing: {main_project}")
+                
+                analysis = project_analyzer.analyze_project_structure(main_project)
+                files = project_analyzer.read_key_files(main_project)
+                completeness = project_analyzer.assess_completeness(analysis, files)
+                plan = project_analyzer.generate_completion_plan(analysis, files)
+                
+                print(f"📋 Project: {analysis['name']}")
+                print(f"🔧 Type: {analysis['type']}")
+                print(f"⚡ Technologies: {', '.join(analysis['technologies'])}")
+                print(f"📈 Status: {completeness}")
+                
+                print(f"\n✅ Completion Plan:")
+                for i, task in enumerate(plan, 1):
+                    print(f"  {i}. {task}")
+                
+                # Use Intelligent Executor to autonomously implement the project
+                executor = superpower_manager.get_superpower('Intelligent Executor')
+                if executor:
+                    print(f"\n🤖 Autonomous Implementation Mode - Taking Action:")
+                    
+                    # Let DomAI autonomously analyze and implement
+                    user_intent = f"Complete the FlipAI memory card game implementation. {command}"
+                    
+                    result = executor.analyze_and_implement_project(main_project, user_intent)
+                    
+                    if result.get('success'):
+                        print(f"\n🎉 Implementation Complete!")
+                        print(f"📂 Project: {result['project_path']}")
+                        
+                        # Show what was actually created
+                        results = result.get('results', [])
+                        successful_files = [r for r in results if r.get('success')]
+                        
+                        if successful_files:
+                            print(f"✅ Created {len(successful_files)} files:")
+                            for file_result in successful_files:
+                                filename = file_result.get('filename', 'unknown')
+                                size = file_result.get('details', {}).get('size', 0)
+                                print(f"  • {filename} ({size} chars)")
+                        
+                        # Offer to open the project
+                        print(f"\n💡 Ready to test! Try:")
+                        print(f"   open {main_project}/index.html")
+                        print(f"   or: deploy website from {main_project}")
+                        
+                    else:
+                        print(f"❌ Implementation failed: {result.get('error')}")
+                        
+                elif gemini:
+                    print(f"\n🤖 Basic AI Analysis:")
+                    context = f"FlipAI project at {main_project}. Files: {list(files.keys())}. Status: {completeness}. Plan: {plan}"
+                    gemini.chat(f"Based on this FlipAI project analysis, provide specific next steps: {context}", stream=True, concise=True)
+                    
+                else:
+                    print("❌ AI systems not available")
+                    
+            else:
+                print("❌ No FlipAI projects found")
+                print("💡 Try creating a new one with: create flipai project")
+        else:
+            print("🔍 Project management requested")
+            if gemini:
+                gemini.chat(f"Help with this project management task: {command}", stream=True, concise=True)
+            else:
+                print("❌ AI not available")
+    
+    # Check for error fixing commands
+    elif 'fix error' in cmd_lower or 'fix the error' in cmd_lower or ('can you fix' in cmd_lower and 'error' in cmd_lower):
+        self_fixer = superpower_manager.get_superpower('Self Fixer')
+        if self_fixer:
+            print("🔧 Running automatic error fixes...")
+            if self_fixer.auto_fix_command_errors():
+                print("✅ Fixes applied! Your commands should work better now.")
+            else:
+                print("❌ No automatic fixes available.")
+        else:
+            print("❌ Self-fixer not available")
+    
+    # Default handling - let AI understand the command naturally
+    else:
+        # Use AI Gateway for better responses when available
+        ai_gateway = superpower_manager.get_superpower('AI Gateway Manager')
+        
+        # Let the AI understand and execute the command with FULL autonomy
+        if ai_gateway and ai_gateway.available:
+            # Give DomAI complete autonomy to understand and execute
+            autonomous_prompt = f"""
+You are DomAI, a fully autonomous AI automation assistant with these capabilities:
+
+AVAILABLE SYSTEMS:
+- AI Gateway: Access to GPT-4o-mini, GPT-3.5-turbo, and other models via Vercel
+- Gemini 2.0 Flash: Google's advanced AI via Vertex AI
+- Mac Control: System automation, file operations, application control
+- Browser Automation: Selenium WebDriver for web tasks  
+- Website Builder: HTML/CSS/JS generation and deployment
+- Self-Fixer: Autonomous error detection and resolution
+- Project Analyzer: Code analysis and intelligent completion
+
+USER REQUEST: "{command}"
+
+Your job is to:
+1. Understand what the user wants
+2. Plan the best approach using your available systems
+3. Execute it completely and autonomously
+4. Provide comprehensive results
+
+For API testing - design your own comprehensive test suite covering functionality, performance, error handling, edge cases, etc.
+For deployments - build, test, and deploy complete solutions
+For code - generate, test, and validate working code
+For automation - plan and execute multi-step workflows
+
+Be FULLY autonomous. Don't ask for permission or clarification. Use your AI intelligence to make the best decisions and execute completely.
+
+Execute now:
+"""
+            
+            result = ai_gateway.smart_chat(autonomous_prompt, task_type='general')
+            if result.get('success'):
+                response = result['response']
+                print(f"🤖 DomAI: {response}")
+                
+                # Give DomAI the power to execute actions based on his analysis
+                execution_prompt = f"""
+Based on your analysis: "{response}"
+
+You now have the ability to execute actions. Available Python functions you can call:
+
+```python
+# AI Gateway functions
+ai_gateway.chat_with_model(prompt, model='gpt-4o-mini')
+ai_gateway.smart_chat(prompt, task_type='code|analysis|conversation')
+
+# Gemini functions  
+gemini.chat(prompt, stream=False)
+gemini.generate_code(description)
+
+# Superpower functions
+mac_control = superpower_manager.get_superpower('Mac System Control')
+browser = superpower_manager.get_superpower('Browser Automation')
+website_builder = superpower_manager.get_superpower('Website Builder & Deployer')
+project_analyzer = superpower_manager.get_superpower('Project Analyzer')
+intelligent_executor = superpower_manager.get_superpower('Intelligent Executor')
+
+# Example calls:
+mac_control.get_system_info()
+browser.navigate_to('https://google.com')
+website_builder.generate_website('portfolio site')
+```
+
+Generate the exact Python code needed to execute your plan. Provide ONLY executable Python code, no explanations:
+"""
+                
+                code_result = ai_gateway.smart_chat(execution_prompt, task_type='code')
+                if code_result.get('success'):
+                    generated_code = code_result['response']
+                    
+                    # Clean the code response
+                    if '```python' in generated_code:
+                        generated_code = generated_code.split('```python')[1].split('```')[0]
+                    elif '```' in generated_code:
+                        generated_code = generated_code.split('```')[1].split('```')[0]
+                    
+                    print("\n⚡ Executing autonomous actions...")
+                    
+                    try:
+                        # Create a safe execution environment with all superpowers
+                        exec_globals = {
+                            'ai_gateway': ai_gateway,
+                            'gemini': gemini,
+                            'superpower_manager': superpower_manager,
+                            'mac_control': superpower_manager.get_superpower('Mac System Control'),
+                            'browser': superpower_manager.get_superpower('Browser Automation'),
+                            'website_builder': superpower_manager.get_superpower('Website Builder & Deployer'),
+                            'project_analyzer': superpower_manager.get_superpower('Project Analyzer'),
+                            'intelligent_executor': superpower_manager.get_superpower('Intelligent Executor'),
+                            'self_fixer': superpower_manager.get_superpower('Self Fixer'),
+                            'print': print,
+                            'time': __import__('time'),
+                            'os': __import__('os'),
+                            'len': len,
+                            'range': range,
+                            'enumerate': enumerate
+                        }
+                        
+                        # Execute DomAI's generated code
+                        exec(generated_code.strip(), exec_globals)
+                        
+                    except Exception as e:
+                        print(f"⚠️  Execution error: {e}")
+                        # Auto-fix if possible
+                        self_fixer = superpower_manager.get_superpower('Self Fixer')
+                        if self_fixer:
+                            self_fixer.detect_and_fix_error(str(e), generated_code)
+            else:
+                # Fallback to Gemini
+                if gemini:
+                    print("💬 Gemini:", end=" ")
+                    gemini.chat(command, stream=True, concise=True)
+                else:
+                    print("❌ AI not available")
+        elif gemini:
+            # Use Gemini to understand and respond
+            understanding_prompt = f"The user said: '{command}'. As DomAI, an AI automation assistant, understand what they want and respond helpfully. If they want to test APIs/models, say you'll test them. Be action-oriented."
+            print("💬 DomAI:", end=" ")
+            gemini.chat(understanding_prompt, stream=True, concise=True)
+        else:
+            print("❌ AI systems not available")
+
+def handle_question(question, tool):
+    """Handle direct questions to DominateAI"""
+    print(f"🤖 DomAI: You asked: {question}")
+    
+    # Simple Q&A responses
+    if 'how' in question.lower() and 'deploy' in question.lower():
+        print("🤖 DomAI: I can deploy to Google Cloud Platform! Try commands like:")
+        print("   • deploy website [description]")
+        print("   • deploy api [description]")
+        print("   • create webhook")
+    elif 'what is' in question.lower() and 'domai' in question.lower():
+        print("🤖 DomAI: I'm DominateAI - an AI-powered automation tool that can generate code, deploy applications, and automate tasks using natural language commands!")
+    else:
+        print("🤖 DomAI: That's an interesting question! I'm focused on automation and deployment tasks. Try asking about what I can deploy or automate for you.")
+
+if __name__ == "__main__":
+    main()

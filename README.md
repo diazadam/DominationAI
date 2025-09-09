@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://opencode.ai">
+  <a href="https://dominationai.com">
     <picture>
       <source srcset="packages/web/src/assets/logo-ornate-dark.svg" media="(prefers-color-scheme: dark)">
       <source srcset="packages/web/src/assets/logo-ornate-light.svg" media="(prefers-color-scheme: light)">
@@ -7,7 +7,7 @@
     </picture>
   </a>
 </p>
-<p align="center">AI coding agent, built for the terminal.</p>
+<p align="center">🚀 The Ultimate AI Automation Platform - Terminal Coding + Autonomous Execution</p>
 <p align="center">
   <a href="https://opencode.ai/discord"><img alt="Discord" src="https://img.shields.io/discord/1391832426048651334?style=flat-square&label=discord" /></a>
   <a href="https://www.npmjs.com/package/opencode-ai"><img alt="npm" src="https://img.shields.io/npm/v/opencode-ai?style=flat-square" /></a>
@@ -18,16 +18,29 @@
 
 ---
 
+## 🎯 DominationAI = OpenCode + DomAI Superpowers
+
+**OpenCode Features:**
+- Professional terminal UI for AI coding
+- Provider-agnostic (Anthropic, OpenAI, Google, local models)
+- LSP integration and plugin architecture
+
+**DomAI Superpowers Added:**
+- 100+ AI models via Vercel AI Gateway
+- Autonomous code execution
+- Self-fixing error resolution
+- Mac/Browser automation
+- Natural language understanding
+
 ### Installation
 
 ```bash
 # YOLO
-curl -fsSL https://opencode.ai/install | bash
+curl -fsSL https://dominationai.com/install | bash
 
 # Package managers
-npm i -g opencode-ai@latest        # or bun/pnpm/yarn
-brew install sst/tap/opencode      # macOS and Linux
-paru -S opencode-bin               # Arch Linux
+npm i -g dominationai@latest        # or bun/pnpm/yarn
+brew install dominationai          # macOS and Linux
 ```
 
 > [!TIP]
@@ -48,9 +61,27 @@ OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bas
 XDG_BIN_DIR=$HOME/.local/bin curl -fsSL https://opencode.ai/install | bash
 ```
 
+### 💎 Premium Features (Monetization)
+
+**Free Tier:**
+- Basic AI coding (10 requests/day)
+- Community support
+
+**Pro ($29/month):**
+- Unlimited AI requests
+- GPT-4, Claude Opus access
+- Browser automation
+- Priority support
+
+**Enterprise ($99/month):**
+- All Pro features
+- Custom deployments
+- Team collaboration
+- API access
+
 ### Documentation
 
-For more info on how to configure opencode [**head over to our docs**](https://opencode.ai/docs).
+For more info [**see our docs**](https://dominationai.com/docs).
 
 ### Contributing
 
@@ -92,7 +123,15 @@ $ bun dev
 
 ### FAQ
 
-#### How is this different than Claude Code?
+#### How is DominationAI different?
+
+**vs Claude Code:**
+- 100% open source with premium tiers
+- Autonomous execution (not just suggestions)
+- Self-fixing capabilities
+- Browser and system automation
+
+**vs Original OpenCode:**
 
 It's very similar to Claude Code in terms of capability. Here are the key differences:
 

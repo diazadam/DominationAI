@@ -1,0 +1,23 @@
+# Core dependencies
+pyautogui==0.9.54
+selenium==4.34.2
+transformers==4.56.1
+stable-baselines3==2.7.0
+requests==2.32.4
+gitpython==3.1.45
+
+# OpenAI integration
+openai==1.98.0
+python-dotenv==1.1.1
+
+# Additional ML/AI libraries
+torch>=2.3.0
+numpy>=1.20.0
+
+# Web automation
+webdriver-manager==4.0.2
+
+# Utilities
+pillow>=9.2.0
+pandas>=2.0.0
+matplotlib>=3.5.0
